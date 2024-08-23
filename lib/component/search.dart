@@ -26,16 +26,16 @@ class _SearchComponentState extends State<SearchComponent> {
     });
 
     try {
-      final response = await _dio.get('https://reqres.in/api/users/$searchText');
-      final data = response.data['data'];
+      final response = await _dio.get('https://restcountries.com/v3.1/name/$searchText?fields=name,capital,flags,population,languages');
+      final data = (response.data as List).first;
 
       if (data != null) {
-        widget.onSearchResult(data);  // Pass data to HomeScreen for the popup
+        widget.onSearchResult(data);
       } else {
-        _showAlertDialog('404: User does not exist.');
+        _showAlertDialog('404: Country does not exist.');
       }
     } catch (e) {
-      _showAlertDialog('Error fetching user details: $e');
+      _showAlertDialog('Error fetching country details: $e');
     }
 
     setState(() {
@@ -68,9 +68,9 @@ class _SearchComponentState extends State<SearchComponent> {
         Expanded(
           child: TextField(
             controller: _searchController,
-            keyboardType: TextInputType.number,
+            keyboardType: TextInputType.text,
             decoration: InputDecoration(
-              hintText: 'User ID',
+              hintText: 'Country Name',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

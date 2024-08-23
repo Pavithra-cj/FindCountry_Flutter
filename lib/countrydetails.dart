@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
-class UserDetailsDialog extends StatelessWidget {
-  final Map<String, dynamic> userData;
+class CountryDetailsDialog extends StatelessWidget {
+  final Map<String, dynamic> countryData;
 
-  const UserDetailsDialog({super.key, required this.userData});
+  const CountryDetailsDialog({super.key, required this.countryData});
 
   @override
   Widget build(BuildContext context) {
+    final languages = (countryData['languages'] as Map).values.join(", ");
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -19,12 +20,16 @@ class UserDetailsDialog extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 70,
-              backgroundImage: NetworkImage(userData['avatar']),
+              backgroundImage: NetworkImage(countryData['flags']['png']),
             ),
             const SizedBox(height: 16),
-            Text("ID: ${userData['id']}", style: const TextStyle(fontSize: 18)),
+            Text("Name: ${countryData['name']['common']}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text("Name: ${userData['first_name']}", style: const TextStyle(fontSize: 16)),
+            Text("Capital: ${countryData['capital'].first}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Population: ${countryData['population']}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text("Languages: $languages", style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
