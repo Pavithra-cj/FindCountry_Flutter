@@ -1,74 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:find_country_flutter/component/search.dart';
+import 'countrydetails.dart';
+import 'component/search.dart';
 
-class Homescreen extends StatefulWidget {
-  const Homescreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<Homescreen> createState() => _HomescreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomescreenState extends State<Homescreen> {
-  List<User> users = [];
+class _HomeScreenState extends State<HomeScreen> {
+  List<Country> countries = [];
   final Dio dio = Dio();
-  int page = 1;
-  Map<String, dynamic>? popupData;
 
   @override
   void initState() {
     super.initState();
-    fetchUsers();
+    fetchCountries();
   }
 
-  Future<void> fetchUsers() async {
+  Future<void> fetchCountries() async {
     try {
-      final response = await dio.get('https://reqres.in/api/users?page=$page');
-      final data = (response.data['data'] as List).map((json) => User.fromJson(json)).toList();
+      final response = await dio.get('https://restcountries.com/v3.1/region/europe?fields=name,capital,flags,population');
+      final data = (response.data as List).map((json) => Country.fromJson(json)).toList();
 
       setState(() {
-        users = data;
+        countries = data;
       });
     } catch (e) {
-      print("Error fetching users: $e");
+      print("Error fetching countries: $e");
     }
   }
 
-  // Triggered when a search result or a card view is selected
-  void _onUserSelected(Map<String, dynamic> data) {
-    setState(() {
-      popupData = data;
-    });
-  }
-
-  // Close the popup window
-  void _closePopup() {
-    setState(() {
-      popupData = null;
-    });
+  void _onCountrySelected(Map<String, dynamic> countryData) {
+    showDialog(
+      context: context,
+      builder: (context) => CountryDetailsDialog(countryData: countryData),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Available Users")),
+      appBar: AppBar(title: const Text("Available Countries")),
       body: SafeArea(
         child: Column(
           children: [
-            // Search component at the top
+            // Search component
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child: SearchComponent(onSearchResult: _onUserSelected),
+              child: SearchComponent(onSearchResult: _onCountrySelected),
             ),
             const SizedBox(height: 10),
-            // User list
+            // Country list
             Expanded(
               child: ListView.builder(
-                itemCount: users.length,
+                itemCount: countries.length,
                 itemBuilder: (context, index) {
-                  final user = users[index];
+                  final country = countries[index];
                   return GestureDetector(
-                    onTap: () => _onUserSelected(user.toJson()), // Open popup when tapping a card
+                    onTap: () => _onCountrySelected(country.toJson()),
                     child: Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
@@ -80,16 +72,16 @@ class _HomescreenState extends State<Homescreen> {
                         child: Row(
                           children: [
                             CircleAvatar(
-                              backgroundImage: NetworkImage(user.avatar),
+                              backgroundImage: NetworkImage(country.flag),
                               radius: 25,
                             ),
                             const SizedBox(width: 10),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("ID: ${user.id}",
+                                Text("Name: ${country.name}",
                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-                                Text("Name: ${user.first_name}",
+                                Text("Capital: ${country.capital}",
                                     style: const TextStyle(fontWeight: FontWeight.normal)),
                               ],
                             ),
@@ -101,60 +93,33 @@ class _HomescreenState extends State<Homescreen> {
                 },
               ),
             ),
-            // Popup to show user details
-            if (popupData != null) _buildPopup(),
           ],
         ),
       ),
     );
   }
-
-  // Popup window to display user details
-  Widget _buildPopup() {
-    return AlertDialog(
-      title: Text("User Details"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            backgroundImage: NetworkImage(popupData!['avatar']),
-            radius: 50,
-          ),
-          const SizedBox(height: 10),
-          Text("ID: ${popupData!['id']}"),
-          Text("Name: ${popupData!['first_name']}"),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: _closePopup,
-          child: Text("Close"),
-        ),
-      ],
-    );
-  }
 }
 
-class User {
-  int id;
-  String first_name;
-  String avatar;
+class Country {
+  String name;
+  String capital;
+  String flag;
 
-  User({required this.id, required this.first_name, required this.avatar});
+  Country({required this.name, required this.capital, required this.flag});
 
-  factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'],
-      first_name: json['first_name'],
-      avatar: json['avatar'],
+  factory Country.fromJson(Map<String, dynamic> json) {
+    return Country(
+      name: json['name']['common'],
+      capital: (json['capital'] as List).first,
+      flag: json['flags']['png'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
-      'first_name': first_name,
-      'avatar': avatar,
+      'name': name,
+      'capital': capital,
+      'flag': flag,
     };
   }
 }
