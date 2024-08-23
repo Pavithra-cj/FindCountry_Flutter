@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'userdetails.dart';
 import 'package:find_country_flutter/component/search.dart';
 
 class Homescreen extends StatefulWidget {
@@ -13,7 +14,6 @@ class _HomescreenState extends State<Homescreen> {
   List<User> users = [];
   final Dio dio = Dio();
   int page = 1;
-  Map<String, dynamic>? popupData;
 
   @override
   void initState() {
@@ -34,28 +34,21 @@ class _HomescreenState extends State<Homescreen> {
     }
   }
 
-  // Triggered when a search result or a card view is selected
-  void _onUserSelected(Map<String, dynamic> data) {
-    setState(() {
-      popupData = data;
-    });
-  }
-
-  // Close the popup window
-  void _closePopup() {
-    setState(() {
-      popupData = null;
-    });
+  void _onUserSelected(Map<String, dynamic> userData) {
+    showDialog(
+      context: context,
+      builder: (context) => UserDetailsDialog(userData: userData),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Available Users")),
+      appBar: AppBar(title: const Text("Available Users")),
       body: SafeArea(
         child: Column(
           children: [
-            // Search component at the top
+            // Search component
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: SearchComponent(onSearchResult: _onUserSelected),
@@ -68,7 +61,7 @@ class _HomescreenState extends State<Homescreen> {
                 itemBuilder: (context, index) {
                   final user = users[index];
                   return GestureDetector(
-                    onTap: () => _onUserSelected(user.toJson()), // Open popup when tapping a card
+                    onTap: () => _onUserSelected(user.toJson()),
                     child: Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
@@ -101,36 +94,9 @@ class _HomescreenState extends State<Homescreen> {
                 },
               ),
             ),
-            // Popup to show user details
-            if (popupData != null) _buildPopup(),
           ],
         ),
       ),
-    );
-  }
-
-  // Popup window to display user details
-  Widget _buildPopup() {
-    return AlertDialog(
-      title: Text("User Details"),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            backgroundImage: NetworkImage(popupData!['avatar']),
-            radius: 50,
-          ),
-          const SizedBox(height: 10),
-          Text("ID: ${popupData!['id']}"),
-          Text("Name: ${popupData!['first_name']}"),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: _closePopup,
-          child: Text("Close"),
-        ),
-      ],
     );
   }
 }
